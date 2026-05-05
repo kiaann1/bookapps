@@ -35,6 +35,10 @@ const modeDemo = "demo";
 let currentMode = modeReal;
 let realDocumentState = null;
 let pendingGCommand = false;
+if (window.pdfjsLib) {
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+}
 const fauxSectionNames = [
   "Architecture Overview",
   "Runtime Contracts",
@@ -374,6 +378,77 @@ function navigateSections(direction) {
   sections[next].scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+function escapeHtml(text) {
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function buildDocDataFromRawText(title, rawText) {
+  const blocks = rawText
+    .split(/\n{2,}/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  const sections = [];
+  const chunkSize = 4;
+  for (let i = 0; i < blocks.length; i += chunkSize) {
+    sections.push(blocks.slice(i, i + chunkSize));
+  }
+
+  const contentHtml = sections
+    .map((section, index) => {
+      const sectionId = `section-${index + 1}`;
+      const sectionTitle = `Section ${index + 1}`;
+      const paragraphHtml = section.map((p) => `<p>${escapeHtml(p.replace(/\s+/g, " "))}</p>`).join("\n");
+      return `
+        <section id="${sectionId}" class="doc-page">
+          <header class="doc-page-header"><h3>${sectionTitle}</h3></header>
+          <div class="doc-page-content">${paragraphHtml}</div>
+        </section>
+      `;
+    })
+    .join("\n");
+
+  return {
+    title,
+    pageCount: sections.length || 1,
+    toc: (sections.length ? sections : [[]]).map((_, index) => ({
+      id: `section-${index + 1}`,
+      label: `Section ${index + 1}`,
+    })),
+    contentHtml: contentHtml || "<p>No readable text found.</p>",
+  };
+}
+
+async function extractPdfTextInBrowser(file) {
+  if (!window.pdfjsLib) {
+    throw new Error("Browser PDF parser is unavailable.");
+  }
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const task = window.pdfjsLib.getDocument({ data: bytes });
+  const doc = await task.promise;
+  const pageTexts = [];
+
+  for (let i = 1; i <= doc.numPages; i += 1) {
+    const page = await doc.getPage(i);
+    const content = await page.getTextContent();
+    const text = content.items
+      .map((item) => ("str" in item ? item.str : ""))
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    if (text) {
+      pageTexts.push(text);
+    }
+  }
+
+  return pageTexts.join("\n\n");
+}
+
 function isSupportedFile(file) {
   if (!file) {
     return false;
@@ -414,6 +489,19 @@ async function uploadDocument(file) {
     }
     if (!data) {
       throw new Error("Server returned an unexpected response format.");
+    }
+
+    if (data.warning && file.name.toLowerCase().endsWith(".pdf")) {
+      uploadStatus.textContent = "Server parsing failed, trying browser extraction...";
+      try {
+        const fallbackText = await extractPdfTextInBrowser(file);
+        if (fallbackText.trim().length > 0) {
+          data = buildDocDataFromRawText(file.name.replace(/\.pdf$/i, ""), fallbackText);
+          uploadStatus.textContent = "Converted using browser PDF extraction.";
+        }
+      } catch {
+        // keep server warning response if browser extraction fails
+      }
     }
 
     realDocumentState = data;

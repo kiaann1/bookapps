@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Local PDF to Docs Reader</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <aside class="ad-rail ad-rail-left" aria-hidden="true">
+      <div class="ad-card">
+        <p class="ad-label">Sponsored</p>
+        <h3>Ship API Integrations 4x Faster</h3>
+        <p>Typed SDK scaffolds for internal tools and partner workflows.</p>
+      </div>
+      <div class="ad-card">
+        <p class="ad-label">Partner</p>
+        <h3>Observability for Growth Teams</h3>
+        <p>Traces, logs, and alerts in one dashboard with AI summaries.</p>
+      </div>
+    </aside>
+
+    <aside class="ad-rail ad-rail-right" aria-hidden="true">
+      <div class="ad-card">
+        <p class="ad-label">Recommended</p>
+        <h3>EdgeAuth Cloud</h3>
+        <p>Drop-in auth, SSO, and enterprise RBAC for modern platforms.</p>
+      </div>
+      <div class="ad-card">
+        <p class="ad-label">Trending</p>
+        <h3>Deploy Notes Weekly</h3>
+        <p>Actionable engineering insights from high-scale teams.</p>
+      </div>
+    </aside>
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-logo">NX</div>
+        <div>
+          <h1>NexaDocs Platform</h1>
+          <p>Internal technical reference</p>
+        </div>
+      </div>
+      <nav class="topnav">
+        <a href="#">Guides</a>
+        <a href="#">API</a>
+        <a href="#">SDK</a>
+        <a href="#">Status</a>
+        <input id="searchInput" class="search-input" type="search" placeholder="Search docs... ( / )" />
+        <select id="themeSelect" class="topnav-select">
+          <option value="midnight">Midnight</option>
+          <option value="graphite">Graphite</option>
+          <option value="light">Light</option>
+        </select>
+        <button id="demoModeBtn" type="button" class="topnav-btn">Demo Mode</button>
+        <span class="status-pill">LIVE</span>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <section id="dropzone" class="dropzone">
+        <input id="fileInput" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden />
+        <p><strong>Drag and drop your PDF or DOCX here</strong></p>
+        <p id="uploadStatus">No document loaded.</p>
+        <label class="upload-toggle">
+          <input id="ocrToggle" type="checkbox" />
+          Enable OCR fallback (experimental)
+        </label>
+        <label class="upload-toggle">
+          Parse mode
+          <select id="parseModeSelect">
+            <option value="strict">Strict headings</option>
+            <option value="flow">Flow mode</option>
+          </select>
+        </label>
+        <div class="dropzone-actions">
+          <button id="pickFileBtn" type="button">Choose file</button>
+          <button id="clearBtn" type="button" class="button-secondary">Clear</button>
+          <button id="copyMarkdownBtn" type="button" class="button-secondary">Copy Markdown</button>
+          <button id="exportHtmlBtn" type="button" class="button-secondary">Export HTML</button>
+          <button id="saveSnippetBtn" type="button" class="button-secondary">Save Selection</button>
+        </div>
+      </section>
+
+      <section id="docView" class="doc-shell hidden">
+        <aside class="doc-sidebar">
+          <h2>Contents</h2>
+          <nav id="toc" class="toc"></nav>
+          <div class="sidebar-block">
+            <h3>Quick Links</h3>
+            <a href="#">Authentication</a>
+            <a href="#">Integrations</a>
+            <a href="#">Release Notes</a>
+          </div>
+          <div class="sidebar-block">
+            <h3>Environment</h3>
+            <p>Region: eu-west-1</p>
+            <p>Channel: stable</p>
+            <p>Build: v3.2.14</p>
+          </div>
+          <div class="sidebar-block">
+            <h3>Reading Controls</h3>
+            <label class="control-label">Font size <input id="fontSizeRange" type="range" min="15" max="21" value="16" /></label>
+            <label class="control-label">Line height <input id="lineHeightRange" type="range" min="16" max="23" value="18" /></label>
+            <label class="control-label">Content width <input id="contentWidthRange" type="range" min="760" max="1180" value="980" /></label>
+          </div>
+          <div class="sidebar-block">
+            <h3>Saved Snippets</h3>
+            <div id="snippetList" class="snippet-list"></div>
+          </div>
+        </aside>
+        <div id="resizeHandle" class="resize-handle" aria-hidden="true"></div>
+        <article class="doc-view">
+          <header class="doc-header">
+            <h1 id="docTitle">Document</h1>
+            <p id="docMeta"></p>
+          </header>
+          <div id="docContent"></div>
+        </article>
+        <aside class="doc-rightbar">
+          <h2>On This Page</h2>
+          <nav id="onThisPage" class="toc"></nav>
+          <div class="sidebar-block">
+            <h3>Shortcuts</h3>
+            <p>/ Search</p>
+            <p>j / k Sections</p>
+            <p>g t Top</p>
+            <p>g c Contents</p>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

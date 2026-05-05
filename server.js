@@ -1,6 +1,5 @@
 const express = require("express");
 const multer = require("multer");
-const pdfParse = require("pdf-parse");
 const mammoth = require("mammoth");
 const path = require("path");
 
@@ -66,6 +65,13 @@ function isLikelyHeadingLine(line) {
 }
 
 async function extractWithPdfParse(buffer) {
+  if (process.env.VERCEL) {
+    throw new Error("pdf-parse disabled in Vercel runtime");
+  }
+
+  // Lazy-load so unsupported runtimes do not crash at cold start.
+  // eslint-disable-next-line global-require, import/no-dynamic-require
+  const pdfParse = require("pdf-parse");
   const parsed = await pdfParse(buffer);
   return [{ pageNumber: 1, text: parsed.text || "" }];
 }

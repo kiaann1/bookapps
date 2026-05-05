@@ -303,7 +303,11 @@ app.post("/api/convert", upload.single("document"), async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Local doc reader running at http://localhost:${port}`);
-});
+if (process.env.VERCEL) {
+  module.exports = app;
+} else {
+  app.listen(port, () => {
+    // eslint-disable-next-line no-console
+    console.log(`Local doc reader running at http://localhost:${port}`);
+  });
+}

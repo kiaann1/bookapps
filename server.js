@@ -23,7 +23,7 @@ function escapeHtml(text) {
 }
 
 function isMeaningfulText(text) {
-  return (text || "").replace(/\s+/g, " ").trim().length > 80;
+  return (text || "").replace(/\s+/g, " ").trim().length > 8;
 }
 
 function cleanOutlineLabel(label) {
@@ -88,7 +88,10 @@ async function extractWithPdfJs(buffer) {
 
   for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
     const page = await document.getPage(pageNumber);
-    const textContent = await page.getTextContent();
+    const textContent = await page.getTextContent({
+      normalizeWhitespace: true,
+      disableCombineTextItems: false,
+    });
     const rows = [];
 
     for (const item of textContent.items) {
@@ -154,7 +157,7 @@ async function extractPagesFromPdf(buffer) {
   try {
     const pages = await extractWithPdfJs(buffer);
     const combinedText = pages.map((page) => page.text).join("\n");
-    if (isMeaningfulText(combinedText)) {
+    if (isMeaningfulText(combinedText) || pages.some((page) => (page.text || "").trim().length > 0)) {
       return pages;
     }
   } catch (fallbackError) {

@@ -253,13 +253,14 @@ function toDocumentationHtmlBySection(sections, parseMode = "strict") {
 }
 
 app.post("/api/convert", upload.single("document"), async (req, res) => {
+  let ocrEnabled = false;
   try {
     if (!req.file || !req.file.originalname) {
       return res.status(400).json({ error: "No file uploaded." });
     }
 
     const parseMode = req.body?.parseMode === "flow" ? "flow" : "strict";
-    const ocrEnabled = req.body?.ocrEnabled === "true";
+    ocrEnabled = req.body?.ocrEnabled === "true";
 
     const extension = path.extname(req.file.originalname).toLowerCase();
     let pages;

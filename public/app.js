@@ -401,9 +401,19 @@ async function uploadDocument(file) {
       body: formData,
     });
 
-    const data = await response.json();
+    const responseText = await response.text();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      data = null;
+    }
+
     if (!response.ok) {
-      throw new Error(data.error || "Conversion failed.");
+      throw new Error(data?.error || `Conversion failed with status ${response.status}.`);
+    }
+    if (!data) {
+      throw new Error("Server returned an unexpected response format.");
     }
 
     realDocumentState = data;
